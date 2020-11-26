@@ -7,15 +7,7 @@ as well and I figured I might as well share it with others.
 
 ## Acknowledgements
 
-Some examples are from an online course found on website Openclassrooms (in French).
-Course: https://openclassrooms.com/fr/courses/235344-apprenez-a-programmer-en-python?status=published
+Some examples are from an online course in French found on website Openclassrooms (see: https://openclassrooms.com/fr/courses/235344-apprenez-a-programmer-en-python?status=published)
 
-While the official Python documentation (https://docs.python.org/3/) provided valuable information,
-many questions would have been left unanswered without the Stackoverflow community (https://stackoverflow.com/).
-
-
-## Project information
-
-Author: lostdatum <lostdatum@outlook.com>
-Publication: 10/11/2020
-License: see file LICENSE.txt
+While the official Python documentation (see: https://docs.python.org/3/) provided valuable information,
+many questions would have been left unanswered without the Stackoverflow community (see:https://stackoverflow.com/).
