@@ -9,7 +9,7 @@
 def stepprint(string):
     """Prints string formatting it as a test step."""
 
-    print("\n>> " + string + "\n")
+    print("\n>> " + string + ":\n")
 
 
 
