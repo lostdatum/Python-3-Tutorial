@@ -3,98 +3,35 @@
 # =============================================================================
 
 # This tutorial is about redefining usual operators (like +, -, *, <, etc.) for 
-# custom classes. 
-# NB: This is called operator overloading in some other languages (e.g. C++).
+# custom classes. NB: The equivalent in C++ is called operator overloading.
+# In order to showcase more use cases, I decided that comparison operators 
+# would be internal (both operands have the same type) and arithmetic operators
+# would be external (the operands have different types).
+# For example, Time objects in h:m:s format will be added to a time expressed
+# a decimal number of hours (refered to as "decimal time" below). NB: from a
+# practical point of view we should also be able to add two Time objects, but
+# I want to keep this simple (and this class is not really useful anyway !).
+
 
 # -------------------------------- DEFINITIONS --------------------------------
 
 
 class Time:
-    """ Represents times and durations in H:M:S format."""
+    """ Represents times and durations in h:m:s format."""
 
 
-    def __init_0(self, hours, mins=None, secs=None):
+    def __init__(self, hours, mins, secs):
         """Creates Time instance."""
 
-        if mins or secs: # H:M:S format
-
-            if (not isinstance(hours, int) # check type
-                    or isinstance(hours, bool)):
-                msg = "arguments must be integers to use H:M:S format"
+        for arg in (hours, mins, secs):
+            if (not isinstance(arg, int) # check type
+                    or isinstance(arg, bool)):
+                msg = "all arguments must be integers"
                 raise TypeError(msg)
-            self._hours = hours
-        
-            if mins:
-
-                if (not isinstance(mins, int) # check type
-                        or isinstance(mins, bool)):
-                    msg = "arguments must be integers to use H:M:S format"
-                    raise TypeError(msg)
-                self._mins = mins
             
-            else:
-
-                self._mins = 0
-
-            if secs:
-
-                if (not isinstance(secs, int) # check type
-                        or isinstance(secs, bool)):
-                    msg = "arguments must be integers to use H:M:S format"
-                    raise TypeError(msg)
-                self._secs = secs
-            
-            else:
-
-                self._secs = 0
-
-        else: # decimal format
-
-            if (not isinstance(hours, (int, float)) # check type
-                    or isinstance(hours, bool)):
-                msg = "argument must be a real number to use decimal format"
-                raise TypeError(msg) 
-            (self._hours, self._mins, self._secs) = self.dec2hms(hours)
-
-
-
-    def __init__(self, *args):
-        """Creates Time instance."""
-
-        # Create canvas
-        self._hours = None
-        self._mins = None
-        self._secs = None
-
-        # Parse arguments
-        if len(args) > 3:
-
-            raise TypeError("expected 1 to 3 arguments")
-        
-        elif len(args) > 1: # H:M:S format
-
-            for (idx, field) in enumerate(vars(self)):
-                
-                if idx < len(args): # argument was provided
-
-                    if (not isinstance(args[idx], int) # check type
-                            or isinstance(args[idx], bool)):
-                        msg = "arguments must be integers to use H:M:S format"
-                        raise TypeError(msg)
-                    vars(self)[field] = args[idx] # self.field does not work,
-                                                  # as field is a string
-                
-                else:
-
-                    vars(self)[field] = 0
-            
-        elif len(args) > 0: # decimal time (in hours)
-
-            if (not isinstance(args[0], (int, float)) # check type
-                    or isinstance(args[0], bool)):
-                msg = "argument must be a real number to use decimal format"
-                raise TypeError(msg)
-            (self._hours, self._mins, self._secs) = self.dec2hms(args[0])
+        self._hours = hours
+        self._mins = mins
+        self._secs = secs
 
 
 
@@ -146,25 +83,28 @@ class Time:
                 or isinstance(decimal, bool)):
                 raise TypeError("operand must be a decimal number")
         
+        # Get class (to call initializer)
+        cls = type(self)
+
         # Conversion
-        time = type(self)(*self.dec2hms(decimal))
-            # type(self) gives class, then it can be used to call initializer
+        hms = self.dec2hms(decimal)
+        time = cls(*hms)
         
-        # Computation (easier with decimal times, but this is fun)
+        # Secs
         total_secs = self._secs + time._secs
         secs = total_secs % 60
-
+        # Mins
         total_mins = self._mins + time._mins + total_secs//60
         mins = total_mins % 60
-
+        # Hours
         hours = self._hours + time._hours + total_mins//60
 
-        return type(self)(hours, mins, secs)
+        return cls(hours, mins, secs)
     
 
 
     def __radd__(self, decimal):
-        """Adds calling Time instance to given Time instance."""
+        """Adds calling Time instance to given decimal time."""
         # Called by 'decimal + instance', which is equivalent under
         # the hood to 'instance.__iadd__(decimal)'.
         # As operator '+' is commutative, we can just use __add__ (it will also
@@ -175,32 +115,36 @@ class Time:
 
 
     def __sub__(self, decimal):
-        """Substracts given Time from calling Time instance."""
+        """Substracts given decimal time from calling Time instance."""
         # Called by 'instance - decimal', which is equivalent under
         # the hood to 'instance.__sub__(decimal)'.
 
         if (not isinstance(decimal, (int, float)) # check type
                 or isinstance(decimal, bool)):
-                raise TypeError("operand must be a decimal number")
+            raise TypeError("operand must be a decimal number")
+
+        # Get class (to call initializer)
+        cls = type(self)
 
         # Conversion
-        time = type(self)(*self.dec2hms(decimal))
+        hms = self.dec2hms(decimal)
+        time = cls(*hms)
         
-        # Computation (easier with decimal times, but this is fun)
+        # Secs
         total_secs = self._secs - time._secs
         secs = total_secs % 60
-
+        # Mins
         total_mins = self._mins - time._mins + total_secs//60
         mins = total_mins % 60
-
+        # Hours
         hours = self._hours - time._hours + total_mins//60
 
-        return type(self)(hours, mins, secs)
+        return cls(hours, mins, secs)
 
 
 
     def __rsub__(self, decimal):
-        """Substracts calling Time instance from given Time instance."""
+        """Substracts calling Time instance from given decimal time."""
         # Called by 'decimal - instance', which is equivalent under
         # the hood to 'instance.__isub__(decimal)'.
         
@@ -217,10 +161,14 @@ class Time:
                 or isinstance(decimal, bool)):
                 raise TypeError("operand must be a decimal number")
         
-        # Computation (in decimal, its cheating, but you know...)
-        product = self.hms2dec() * decimal
+        # Get class (to call initializer)
+        cls = type(self)
+        
+        # Computation (in decimal -it's cheating, but you know...)
+        prod_dec = self.hms2dec() * decimal
+        prod_hms = self.dec2hms(prod_dec)
 
-        return type(self)(product) # use initializer with decimal value
+        return cls(*prod_hms)
 
 
 
@@ -274,28 +222,38 @@ class Time:
     # About comparison
     # ----------------
     # Python can infer __ne__, __lt__ and __le__ methods from previously
-	# defined __eq__, __gt__ and __ge__ methods (or the other way around), so
-    # we do not need to define them here.
+	# defined __eq__, __gt__ and __ge__ methods (or the other way around),
+    #  so we do not need to define them here.
 	
 	
 	
 # -------------------------------- TEST SCRIPT --------------------------------
-time_1 = Time(13, 15)
-dur_1 = time_1.hms2dec()
+
+import misctest as mt  # custom functions to make tests easier
+
+mt.stepprint("Constructing Time objects")
+dur_1 = 3.75
 dur_2 = 2.425
-time_2 = Time(dur_2)
-print("TIME\tHOURS\tHH:MM:SS")
-print("time_1\t{}\t{}".format(dur_1, time_1))
-print("time_2\t{}\t{}".format(dur_2, time_2))
-print("Addition: ", time_1 + dur_2)
-print("Addition (reversed): ", dur_1 + time_2)
-print("Subtraction: ", time_1 - dur_2)
-print("Subtraction (reversed): ", dur_1 - time_2)
-print("Multiplication x 2': ", time_1 * 2)
-print("Multiplication x 2 (reversed): ", 2 * time_1)
-print("Comparison 'time_1 == time_1: ", time_1 == time_1)
-print("Comparison 'time_1 != time_1: ", time_1 != time_1)
-print("Comparison 'time_1 >= time_1: ", time_1 >= time_1)
-print("Comparison 'time_1 <= time_1: ", time_1 <= time_1)
-print("Comparison 'time_1 >= time_2: ", time_1 >= time_2)
-print("Comparison 'time_1 <= time_2: ", time_1 <= time_2)
+hms_1 = Time.dec2hms(dur_1)
+hms_2 = Time.dec2hms(dur_2)
+time_1 = Time(*hms_1)
+time_2 = Time(*hms_2)
+print("NUM\tDUR (h)\t\tTIME (hh:mm:ss)")
+print("1\t{}\t\t{}".format(dur_1, time_1))
+print("2\t{}\t\t{}".format(dur_2, time_2))
+
+mt.stepprint("Testing arithmetic operators")
+print("Addition 'time_1 + dur_2': ", time_1 + dur_2)
+print("Addition (reversed) 'dur_1 + time_2': ", dur_1 + time_2)
+print("Subtraction 'time_1 - dur_2': ", time_1 - dur_2)
+print("Subtraction (reversed) 'dur_1 - time_2': ", dur_1 - time_2)
+print("Multiplication 'time_1 * 2': ", time_1 * 2)
+print("Multiplication (reversed) '2 * time_1': ", 2 * time_1)
+
+mt.stepprint("Testing comparison operators")
+print("Comparison 'time_1 == time_1': ", time_1 == time_1)
+print("Comparison 'time_1 != time_1': ", time_1 != time_1)
+print("Comparison 'time_1 >= time_1': ", time_1 >= time_1)
+print("Comparison 'time_1 <= time_1': ", time_1 <= time_1)
+print("Comparison 'time_1 >= time_2': ", time_1 >= time_2)
+print("Comparison 'time_1 <= time_2': ", time_1 <= time_2)
